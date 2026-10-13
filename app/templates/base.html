@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Dhwani{% endblock %} · Dhwani</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">☔</span> <strong>Dhwani</strong>
+      <span class="sub">Mumbai suburban rail reliability</span></div>
+    <nav>
+      {% if g.user %}
+        {% if g.user.role_name == 'admin' %}
+          <a href="{{ url_for('main.admin') }}">Dashboard</a>
+        {% else %}
+          <a href="{{ url_for('main.commuter') }}">My line</a>
+        {% endif %}
+        <span class="who">{{ g.user.full_name }} · {{ g.user.role_name }}</span>
+        <a class="btn" href="{{ url_for('auth.logout') }}">Log out</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">Log in</a>
+        <a href="{{ url_for('auth.register') }}">Register</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>Dhwani · live weather from Open-Meteo · delay history modelled from timetable + rainfall</footer>
+</body>
+</html>

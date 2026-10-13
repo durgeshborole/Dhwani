@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Analytics dashboard <span class="muted">· administrator</span></h1>
+
+<div class="grid four">
+  <div class="card stat">
+    <div class="label">Average delay</div>
+    <div class="value">{{ kpis.avg_delay }} <small>min</small></div>
+  </div>
+  <div class="card stat">
+    <div class="label">On-time (≤ 5 min)</div>
+    <div class="value">{{ kpis.on_time_pct }}%</div>
+  </div>
+  <div class="card stat">
+    <div class="label">Severe delays (&gt; 15 min)</div>
+    <div class="value">{{ '{:,}'.format(kpis.severe_delays) }}</div>
+  </div>
+  <div class="card stat">
+    <div class="label">Least reliable line</div>
+    <div class="value small-value">{{ kpis.worst_line }}</div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Line reliability</h2>
+    <table>
+      <thead><tr><th>Rank</th><th>Line</th><th>Records</th><th>Avg delay</th>
+                 <th>Max</th><th>On-time</th></tr></thead>
+      <tbody>
+      {% for r in reliab %}
+        <tr>
+          <td>{{ r.delay_rank }}</td>
+          <td>{{ r.line_name }}</td>
+          <td>{{ '{:,}'.format(r.records) }}</td>
+          <td>{{ r.avg_delay_min }} min</td>
+          <td>{{ r.max_delay_min }} min</td>
+          <td>{{ r.on_time_pct }}%</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">Ranked with <code>RANK() OVER (ORDER BY avg_delay_min DESC)</code>.</p>
+  </div>
+
+  <div class="card">
+    <h2>Live risk right now</h2>
+    <table>
+      <thead><tr><th>Line</th><th>Risk</th><th>Rain</th><th>Est. delay</th><th>As of</th></tr></thead>
+      <tbody>
+      {% for r in risk %}
+        <tr>
+          <td>{{ r.line_name }}</td>
+          <td><span class="pill {{ r.risk_level }}">{{ risk_label.get(r.risk_level) }}</span></td>
+          <td>{{ r.rainfall_mm }} mm</td>
+          <td>{{ r.predicted_delay_min }} min</td>
+          <td class="small">{{ r.predicted_at }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Monsoon impact — average delay by month</h2>
+  <canvas id="monsoonChart" height="110"></canvas>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Wet season vs dry season</h2>
+    <table>
+      <thead><tr><th>Line</th><th>Jun–Sep avg</th><th>Rest of year</th><th>Extra delay</th></tr></thead>
+      <tbody>
+      {% for s in summary %}
+        <tr>
+          <td>{{ s.line_name }}</td>
+          <td>{{ s.monsoon_avg_delay }} min</td>
+          <td>{{ s.dry_avg_delay }} min</td>
+          <td class="strong">
+            {{ '%.1f'|format((s.monsoon_avg_delay or 0) - (s.dry_avg_delay or 0)) }} min
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">This is the project's headline finding.</p>
+  </div>
+
+  <div class="card">
+    <h2>Station hotspots</h2>
+    <table>
+      <thead><tr><th>Station</th><th>Line</th><th>Incidents</th><th>Avg delay</th></tr></thead>
+      <tbody>
+      {% for h in hotspots %}
+        <tr><td>{{ h.station_name }}</td><td>{{ h.line_name }}</td>
+            <td>{{ h.incidents }}</td><td>{{ h.avg_delay_min }} min</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Delay heat-map — hour of day (minutes)</h2>
+  <table class="heat">
+    <thead>
+      <tr><th>Line</th>{% for h in range(24) %}<th>{{ '%02d'|format(h) }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+    {% for row in heat_rows %}
+      <tr>
+        <td class="rowhead">{{ row.line }}</td>
+        {% for v in row["values"] %}
+          <td data-v="{{ v }}">{{ v }}</td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if worst_hour and worst_hour.line_name and worst_hour.hour_of_day is defined %}
+    <p class="muted small">Worst hour overall:
+      {{ worst_hour.line_name }} at {{ '%02d:00'|format(worst_hour.hour_of_day) }}
+      ({{ worst_hour.avg_delay_min }} min).</p>
+  {% else %}
+    <p class="muted small">No hourly delay data available yet.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Wettest days and their delay</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Rainfall</th><th>Avg delay</th></tr></thead>
+    <tbody>
+    {% for w in wettest %}
+      <tr><td>{{ w.obs_date }}</td><td>{{ w.daily_rainfall_mm }} mm</td>
+          <td>{{ w.avg_delay_min }} min</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // ---- monsoon line chart ----
+  const series = {{ monsoon_series|tojson }};
+  const months = {{ month_names|tojson }};
+  const palette = ['#1f6feb', '#e5534b', '#2da44e', '#bf8700'];
+  const datasets = Object.keys(series).map((line, i) => ({
+    label: line,
+    data: months.map((_, m) => series[line][m + 1] ?? null),
+    borderColor: palette[i % palette.length],
+    backgroundColor: palette[i % palette.length] + '22',
+    tension: .3, spanGaps: true
+  }));
+  new Chart(document.getElementById('monsoonChart'), {
+    type: 'line',
+    data: { labels: months, datasets },
+    options: { plugins: { legend: { position: 'bottom' } },
+               scales: { y: { beginAtZero: true,
+                               title: { display: true, text: 'avg delay (min)' } } } }
+  });
+
+  // ---- colour the heat-map cells ----
+  const max = Math.max(...[...document.querySelectorAll('.heat td[data-v]')]
+                          .map(td => +td.dataset.v || 0), 1);
+  document.querySelectorAll('.heat td[data-v]').forEach(td => {
+    const v = +td.dataset.v || 0;
+    const a = Math.min(1, v / max);
+    td.style.background = `rgba(229,83,75,${(a * 0.85).toFixed(2)})`;
+    td.style.color = a > 0.55 ? '#fff' : '#222';
+  });
+</script>
+{% endblock %}

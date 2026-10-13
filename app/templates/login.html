@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="card auth">
+  <h1>Log in to Dhwani</h1>
+  <p class="muted">Two kinds of account: <strong>admin</strong> (full analytics) and
+     <strong>commuter</strong> (my line status).</p>
+
+  <form method="post" autocomplete="off">
+    <label>Username
+      <input name="username" required autofocus>
+    </label>
+    <label>Password
+      <input name="password" type="password" required>
+    </label>
+    <button type="submit">Log in</button>
+  </form>
+
+  <div class="demo">
+    <p class="muted">Demo accounts (from the seed data):</p>
+    <ul>
+      <li><code>admin</code> / <code>admin123</code> — administrator</li>
+      <li><code>commuter</code> / <code>commuter123</code> — commuter (Western Line)</li>
+      <li><code>priya</code> / <code>commuter123</code> — commuter (Central Line)</li>
+    </ul>
+  </div>
+  <p class="muted">No account? <a href="{{ url_for('auth.register') }}">Register as a commuter</a>.</p>
+</div>
+{% endblock %}

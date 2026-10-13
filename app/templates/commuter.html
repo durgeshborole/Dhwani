@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}My line{% endblock %}
+{% block content %}
+<h1>{{ line.line_name }} <span class="muted">· {{ line.operator }}</span></h1>
+
+<div class="grid">
+  <div class="card stat risk-{{ status.get('risk_level','low') }}">
+    <div class="label">Right now</div>
+    <div class="value">{{ risk_label }}</div>
+    <div class="muted">
+      Rainfall {{ status.get('rainfall_mm','0') }} mm ·
+      estimated delay ~{{ status.get('predicted_delay_min','0') }} min
+    </div>
+    <div class="muted small">as of {{ status.get('predicted_at','—') }}</div>
+  </div>
+
+  <div class="card stat">
+    <div class="label">Worst hour on your line</div>
+    <div class="value">
+      {% if worst_hour is not none %}{{ '%02d:00'|format(worst_hour) }}{% else %}—{% endif %}
+    </div>
+    <div class="muted">based on a year of history</div>
+  </div>
+
+  <div class="card stat">
+    <div class="label">Latest recorded delay</div>
+    <div class="value">
+      {% if recent %}{{ recent[0].delay_minutes }} min{% else %}—{% endif %}
+    </div>
+    <div class="muted">
+      {% if recent %}{{ recent[0].run_date }} · {{ recent[0].station_name }}{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Average delay by hour (your line)</h2>
+  <canvas id="hourChart" height="90"></canvas>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Recent delays</h2>
+    <table>
+      <thead><tr><th>Date</th><th>Hour</th><th>Station</th><th>Delay</th><th>Cause</th></tr></thead>
+      <tbody>
+      {% for r in recent %}
+        <tr>
+          <td>{{ r.run_date }}</td>
+          <td>{{ '%02d:00'|format(r.hour_of_day) }}</td>
+          <td>{{ r.station_name }}</td>
+          <td>{{ r.delay_minutes }} min</td>
+          <td><span class="tag">{{ r.cause }}</span></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="muted">No records.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Other lines right now</h2>
+    <table>
+      <thead><tr><th>Line</th><th>Risk</th><th>Rain</th><th>Est. delay</th></tr></thead>
+      <tbody>
+      {% for o in others %}
+        <tr>
+          <td>{{ o.line_name }}</td>
+          <td><span class="pill {{ o.risk_level }}">{{ risk_label.get(o.risk_level) }}</span></td>
+          <td>{{ o.rainfall_mm }} mm</td>
+          <td>{{ o.predicted_delay_min }} min</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4" class="muted">No live data.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const hours = {{ hours|tojson }};
+  const delays = {{ delays|tojson }};
+  new Chart(document.getElementById('hourChart'), {
+    type: 'line',
+    data: {
+      labels: hours.map(h => String(h).padStart(2,'0') + ':00'),
+      datasets: [{
+        label: 'Avg delay (min)',
+        data: delays,
+        borderColor: '#1f6feb',
+        backgroundColor: 'rgba(31,111,235,.15)',
+        fill: true, tension: .3, pointRadius: 2
+      }]
+    },
+    options: { plugins: { legend: { display: false } },
+               scales: { y: { beginAtZero: true, title: { display: true, text: 'minutes' } } } }
+  });
+</script>
+{% endblock %}
