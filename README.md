@@ -17,7 +17,7 @@ web app with **two logins** — a simple *commuter* view and an analytics
 
 ---
 
-## ✨ Features
+##  Features
 
 - **MySQL star-ish schema** — lines, stations, trips, weather, delays, live
   traffic/AQI, predictions and users, with foreign keys, indexes and views.
@@ -33,7 +33,7 @@ web app with **two logins** — a simple *commuter* view and an analytics
 
 ---
 
-## 🧭 How it fits together
+##  How it fits together
 
 ```
 Open-Meteo (live+archive) ─┐
@@ -52,7 +52,7 @@ Timetable (GTFS-style) ────► seed data ──────────�
 
 ---
 
-## 🛠️ Tech stack
+##  Tech stack
 
 | Layer | Used |
 | --- | --- |
@@ -65,7 +65,7 @@ Timetable (GTFS-style) ────► seed data ──────────�
 
 ---
 
-## 📂 Project structure
+## Project structure
 
 ```
 Dhwani/
@@ -101,7 +101,7 @@ Dhwani/
 
 ---
 
-## 🚀 Setup
+##  Setup
 
 ### 1. Create the database (MySQL Workbench)
 
@@ -155,7 +155,7 @@ python run.py             # open http://127.0.0.1:5000
 
 ---
 
-## 🔄 Refreshing the live data
+##  Refreshing the live data
 
 ```bash
 python manage.py etl-weather 365   # real rainfall history (Open-Meteo)
@@ -168,7 +168,7 @@ Windows, or an EventBridge rule if deployed on AWS Lambda).
 
 ---
 
-## 🧮 The SQL showcase
+##  The SQL showcase
 
 Everything interesting happens in the database. Highlights:
 
@@ -186,7 +186,7 @@ See `docs/key-queries.md` for the exact SQL.
 
 ---
 
-## ⚠️ An honest note on the data
+## An honest note on the data
 
 - **Weather is real** — pulled live from Open-Meteo for Mumbai.
 - **Delays are modelled.** Mumbai publishes no open delay/GTFS-Realtime feed,
@@ -198,7 +198,7 @@ See `docs/key-queries.md` for the exact SQL.
 
 ---
 
-## 🔮 Future work
+##  Future work
 
 - Plug in a real **GTFS-Realtime** feed if one becomes publicly available.
 - Replace the modelled delay history with observed punctuality data.
@@ -209,4 +209,10 @@ See `docs/key-queries.md` for the exact SQL.
 
 ## 👩‍💻 Author
 
-**Asmita Kiran Jadhav** · jadhavasmita.1272004@gmail.com
+**Asmita Jadhav** 
+**Atharva Jadhav**
+**Barun das**
+**Chirag Chawade**
+**Prasad Dahibaokar**
+**Durgesh Borole**
+**Garima Sahu**
