@@ -210,9 +210,15 @@ See `docs/key-queries.md` for the exact SQL.
 ## 👩‍💻 Author
 
 **Asmita Jadhav** 
+
 **Atharva Jadhav**
+
 **Barun das**
+
 **Chirag Chawade**
+
 **Prasad Dahibaokar**
+
 **Durgesh Borole**
+
 **Garima Sahu**
